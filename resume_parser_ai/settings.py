@@ -66,6 +66,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://your-frontend-domain.com",
     "https://z-recruiter-bot.onrender.com",
     "http://localhost:3000",  # If using React locally
+    "http://localhost:5173",  # If using React locally
 ]
 
 ROOT_URLCONF = 'resume_parser_ai.urls'
