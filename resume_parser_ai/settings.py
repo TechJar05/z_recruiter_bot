@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
       'rest_framework',
     'parser_app',
+     'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -53,10 +54,22 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # should be high in the list
+    'django.middleware.common.CommonMiddleware',
+]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = ['*']
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+
+
+CORS_ALLOWED_ORIGINS = [
+    "https://your-frontend-domain.com",
+    "https://z-recruiter-bot.onrender.com",
+    "http://localhost:3000",  # If using React locally
 ]
 
 ROOT_URLCONF = 'resume_parser_ai.urls'
-
+CORS_ALLOW_ALL_ORIGINS = True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
