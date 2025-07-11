@@ -1,0 +1,6 @@
+Django
+openai
+PyMuPDF
+djangorestframework
+python-decouple
+    

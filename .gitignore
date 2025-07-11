@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtualenv
+venv/
+env/
+ENV/
+*.egg-info/
+*.egg
+*.eggs/
+*.whl
+.Python
+
+# Django migrations
+**/migrations/
+!**/migrations/__init__.py
+
+# Environment variables
+.env
+.env.*
+
+# VS Code / PyCharm / IDE configs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and outputs
+*.log
+*.pot
+*.mo
+*.sqlite3
+db.sqlite3
+*.db
+
+# Node (if frontend involved)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Media / Uploads
+media/
+staticfiles/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Test cache
+.pytest_cache/
+coverage.xml
+htmlcov/
+
+# OpenAI token caching
+openai_api.log
