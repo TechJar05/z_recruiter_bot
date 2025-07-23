@@ -8,7 +8,7 @@ import re
 from datetime import datetime
 from dateutil import parser
 import json
-from transformers import pipeline
+
 
 client = OpenAI(api_key=config("OPENAI_API_KEY"))
 # Load the summarizer model once
