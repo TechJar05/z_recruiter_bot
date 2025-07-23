@@ -90,7 +90,7 @@ Extract this data in JSON:
             data["nationality"] = "Unknown"
 
         # 3. Extract all dates
-        data["all_dates_found"] = sorted(list(set(re.findall(r'\b(?:\d{1,2}[/-])?(?:\d{1,2}[/-])?\d{4}\b', raw_text))))
+        # data["all_dates_found"] = sorted(list(set(re.findall(r'\b(?:\d{1,2}[/-])?(?:\d{1,2}[/-])?\d{4}\b', raw_text))))
 
         # 4. Job durations, gaps, employment
         work_ex = data.get("work_experience", [])
@@ -150,7 +150,7 @@ Extract this data in JSON:
             "full_name", "contact_number", "email_address", "resume_summary",
             "work_experience", "education", "technical_skills"
         ]
-        data["missing_fields"] = [field for field in required_fields if not data.get(field)]
+        # data["missing_fields"] = [field for field in required_fields if not data.get(field)]
         data = ResumeParserAPIView.enrich_address_with_pincode(data, raw_text)
 
                 # 7. Auto-generate work_summary and resume_summary if missing
@@ -176,19 +176,20 @@ Extract this data in JSON:
 
     @staticmethod
     def correct_mumbai_pincode(pincode: str) -> str:
-    # Known Mumbai last-3-digit endings
+        pincode = pincode.strip()  # Trim whitespace and newlines
+
         mumbai_pincode_suffixes = {
-            "001", "002", "003", "004", "005", "006", "007", "008", "009",
-            "010", "011", "012", "013", "014", "015", "016", "017", "018", "019",
-            "020", "021", "022", "023", "024", "025", "026", "027", "028", "029",
-            "030", "031", "032", "033", "034", "035", "036", "037", "038", "039",
-            "040", "041", "042", "043", "044", "045", "046", "047", "048", "049",
-            "050", "051", "052", "053", "054", "055", "056", "057", "058", "059",
-            "060", "061", "062", "063", "064", "065", "066", "067", "068", "069",
-            "070", "071", "072", "073", "074", "075", "076", "077", "078", "079",
-            "080", "081", "082", "083", "084", "085", "086", "087", "088", "089",
-            "090", "091", "092", "093", "094", "095", "096", "097", "098", "099",
-            "100", "104"
+            "001", "002", "003", "004", "005", "006", "007", "008", "009", "010", "011",
+            "012", "013", "014", "015", "016", "017", "018", "019", "020", "021",
+            "022", "023", "024", "025", "026", "027", "028", "029", "030", "031",
+            "032", "033", "034", "035", "036", "037", "038", "039", "040", "041",
+            "042", "043", "044", "045", "046", "047", "048", "049", "050", "051",
+            "052", "053", "054", "055", "056", "057", "058", "059", "060", "061",
+            "062", "063", "064", "065", "066", "067", "068", "069", "070", "071",
+            "072", "073", "074", "075", "076", "077", "078", "079", "080", "081",
+            "082", "083", "084", "085", "086", "087", "088", "089", "090", "091",
+            "092", "093", "094", "095", "096", "097", "098", "099", "100", "101",
+            "102", "103", "104"
         }
 
         if len(pincode) == 3 and pincode in mumbai_pincode_suffixes:
@@ -196,10 +197,11 @@ Extract this data in JSON:
         elif len(pincode) == 6:
             return pincode
         return ""
+
    
     @staticmethod
     def enrich_address_with_pincode(parsed_resume: dict, resume_text: str) -> dict:
-        original_pincode = parsed_resume.get("pin_code", "")
+        original_pincode = parsed_resume.get("pin_code", "").strip()
         corrected_pincode = ResumeParserAPIView.correct_mumbai_pincode(original_pincode)
 
         if corrected_pincode:
