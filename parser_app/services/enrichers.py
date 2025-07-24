@@ -26,6 +26,18 @@ def correct_mumbai_pincode(pincode: str) -> str:
     return ""
 
 
+import re
+
+def clean_indian_phone_number(number):
+    if not number:
+        return ""
+    # Remove all non-digit characters
+    digits = re.sub(r"\D", "", number)
+    # Remove country code if present (assume Indian number)
+    if digits.startswith("91") and len(digits) > 10:
+        digits = digits[-10:]
+    return digits
+
 
 
 
@@ -146,5 +158,6 @@ def enrich_resume_data(data: dict, raw_text: str) -> dict:
 
     data["career_gaps"] = career_gaps
     data["is_currently_employed"] = currently_employed
+    data["contact_number"] = clean_indian_phone_number(data.get("contact_number", ""))
     data = enrich_address_with_pincode(data)
     return data
