@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from parser_app.views import index  # Import index view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('parser_app.urls')),
+    path('', index, name='index'),  # Root URL to render index.html
+    path('api/', include('parser_app.urls')),  # Include parser_app URLs
 ]

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zecruiters | AI Resume Parser</title>
+    
+    <!-- Load the static tag library -->
+    {% load static %}
+
+    <!-- Load static CSS -->
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <h1>Zecruiters AI-Powered Resume Matching Engine</h1>
+        <p>Upload Resume and Connect LinkedIn to Complete Your Profile</p>
+    </header>
+
+    <!-- Resume Upload Section -->
+    <section id="upload-section">
+        <h2>Upload Your Resume</h2>
+        <input type="file" id="resume-upload" accept=".pdf,.docx" />
+        <button id="upload-btn">Upload Resume</button>
+        <p id="status-message"></p>
+    </section>
+
+    <!-- Resume Parsed Data Section -->
+    <section id="resume-parsed-section">
+        <h2>Parsed Resume Data</h2>
+        <div id="parsed-resume-container"></div>  <!-- Parsed data will appear here -->
+    </section>
+
+    <!-- LinkedIn Authorization Button -->
+    <section id="linkedin-auth-section">
+        <h2>Connect Your LinkedIn Profile</h2>
+        <button id="linkedin-connect-btn">Connect with LinkedIn</button>
+        <p id="linkedin-status"></p>
+    </section>
+
+    <!-- Load Static JS -->
+    <script src="{% static 'script.js' %}"></script>
+</body>
+</html>
