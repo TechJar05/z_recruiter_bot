@@ -7,19 +7,67 @@ def extract_text_from_pdf(file) -> str:
 
 
 
+# import fitz  # PyMuPDF
+# from PIL import Image
+# import io
+# import os
+# import base64
+# from uuid import uuid4
+
+
+# def extract_images_from_pdf(pdf_file):
+#     images = []
+#     with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
+#         for page_index in range(len(doc)):
+#             for img_index, img in enumerate(doc.get_page_images(page_index)):
+#                 xref = img[0]
+#                 base_image = doc.extract_image(xref)
+#                 image_bytes = base_image["image"]
+#                 image_ext = base_image["ext"]
+
+#                 image = Image.open(io.BytesIO(image_bytes))
+#                 filename = f"profile_image_{uuid4().hex}.{image_ext}"
+
+#                 # Save or return base64 image
+#                 buffered = io.BytesIO()
+#                 image.save(buffered, format=image_ext.upper())
+#                 encoded_img = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                
+#                 images.append({
+#                     "filename": filename,
+#                     "image_base64": f"data:image/{image_ext};base64,{encoded_img}",
+#                     "width": image.width,
+#                     "height": image.height,
+#                     "page": page_index + 1
+#                 })
+
+#                 # 🚀 Usually profile photo is first image → break
+#                 if page_index == 0:
+#                     return images[0]  # Only return first image (likely profile)
+
+#     return None
+
+
+
+
 import fitz  # PyMuPDF
 from PIL import Image
 import io
-import os
 import base64
 from uuid import uuid4
 
 
 def extract_images_from_pdf(pdf_file):
     images = []
+
+    pdf_file.seek(0)  # Reset file pointer
     with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
         for page_index in range(len(doc)):
-            for img_index, img in enumerate(doc.get_page_images(page_index)):
+            page = doc[page_index]
+            img_list = page.get_images(full=True)
+
+            # ✅ Try extracting directly embedded images
+            for img_index, img in enumerate(img_list):
                 xref = img[0]
                 base_image = doc.extract_image(xref)
                 image_bytes = base_image["image"]
@@ -28,21 +76,32 @@ def extract_images_from_pdf(pdf_file):
                 image = Image.open(io.BytesIO(image_bytes))
                 filename = f"profile_image_{uuid4().hex}.{image_ext}"
 
-                # Save or return base64 image
                 buffered = io.BytesIO()
                 image.save(buffered, format=image_ext.upper())
                 encoded_img = base64.b64encode(buffered.getvalue()).decode("utf-8")
-                
-                images.append({
+
+                return {
                     "filename": filename,
                     "image_base64": f"data:image/{image_ext};base64,{encoded_img}",
                     "width": image.width,
                     "height": image.height,
                     "page": page_index + 1
-                })
+                }
 
-                # 🚀 Usually profile photo is first image → break
-                if page_index == 0:
-                    return images[0]  # Only return first image (likely profile)
+            # ✅ Fallback: render full page as image (works for templates)
+            if page_index == 0:
+                pix = page.get_pixmap(dpi=200)
+                image = Image.open(io.BytesIO(pix.tobytes("png")))
+                buffered = io.BytesIO()
+                image.save(buffered, format="PNG")
+                encoded_img = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+                return {
+                    "filename": f"profile_image_rendered_page1.png",
+                    "image_base64": f"data:image/png;base64,{encoded_img}",
+                    "width": image.width,
+                    "height": image.height,
+                    "page": 1
+                }
 
     return None

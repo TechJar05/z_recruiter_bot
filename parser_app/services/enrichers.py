@@ -136,9 +136,23 @@ def enrich_resume_data(data: dict, raw_text: str) -> dict:
         except:
             continue
 
+    def format_duration(duration_years):
+        total_months = int(round(duration_years * 12))
+        years = total_months // 12
+        months = total_months % 12
+        parts = []
+        if years > 0:
+            parts.append(f"{years} year{'s' if years > 1 else ''}")
+        if months > 0:
+            parts.append(f"{months} month{'s' if months > 1 else ''}")
+        return " ".join(parts) if parts else "0 months"
+
     if durations:
-        data["longest_job_duration"] = f"{int(max(durations))} years" if max(durations) >= 1 else f"{int(max(durations)*12)} months"
-        data["shortest_job_duration"] = f"{int(min(durations))} years" if min(durations) >= 1 else f"{int(min(durations)*12)} months"
+        max_dur = max(durations)
+        min_dur = min(durations)
+        data["longest_job_duration"] = format_duration(max_dur)
+        data["shortest_job_duration"] = format_duration(min_dur)
+
 
     career_gaps = []
     if date_ranges:

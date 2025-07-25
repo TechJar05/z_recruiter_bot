@@ -5,67 +5,7 @@ import json
 client = OpenAI(api_key=config("OPENAI_API_KEY"))
 
 def extract_resume_data_with_ai(resume_text: str) -> dict:
-#     prompt = f"""
-# Given this resume text:
 
-# {resume_text}
-
-# Extract this data in JSON format. If any field is missing in the resume, infer it based on content or leave it empty:
-
-# {{
-#   "full_name": "", "contact_number": "", "email_address": "", "date_of_birth": "", 
-#   "gender": "", "marital_status": "", "nationality": "", "residential_address": "", "pin_code": "",
-  
-#   "resume_summary": "", 
-#   "industry": "",  
-
-#   "achievements_and_awards": [{{"year": "", "context": ""}}],
-  
-#   "work_experience": [
-#     {{
-#       "company_name": "", "start_date": "", "end_date": "", 
-#       "industry": "", "designation": "", "department": ""
-#     }}
-#   ],
-
-#   "education": [
-#     {{
-#       "degree": "", "institution_name": "", 
-#       "year_of_passing": "", "grade": ""
-#     }}
-#   ],
-
-#   "certifications": [
-#     {{
-#       "course_name": "", "platform": "", "certification_url": ""
-#     }}
-#   ],
-
-#   "skills_and_technologies": {{
-#     "functional_skills": [],
-#     "technical_skills": [],
-#     "software_tools": []
-#   }},
-
-#   "languages_known": [
-#     {{
-#       "language": "", "proficiency": ""
-#     }}
-#   ],
-
-#   "hobbies": [],
-#   "extra_curricular_activities": [],
-
-#   "linkedin_profile": "", "github_link": "", "personal_website": "", 
-#   "expected_salary": "", "current_salary": ""
-# }}
-
-# Guidelines:
-# - "industry" should reflect the most relevant industry: IT, Finance, Healthcare, etc.
-# - Separate technical skills, functional skills, and software tools appropriately.
-# - Infer hobbies and extra-curriculars based on context if not explicitly mentioned.
-# - For each known language, include proficiency level: Basic, Intermediate, Fluent, or Native.
-# """
     prompt = f"""
 Given this resume text:
 
@@ -156,3 +96,44 @@ Guidelines:
         return json.loads(response.choices[0].message.content)
     except Exception as e:
         return {"error": str(e)}
+
+
+
+
+
+
+
+
+
+# ai_extractor.py
+def regenerate_resume_summary(resume_text: str, summary_type: str) -> str:
+    from openai import OpenAI
+    from decouple import config
+
+    client = OpenAI(api_key=config("OPENAI_API_KEY"))
+
+    prompt_type = {
+        "resume": "Generate a concise and professional resume summary based on the following resume:",
+        "work": "Generate a concise work experience summary from this resume:"
+    }
+
+    prompt = f"""{prompt_type[summary_type]}
+
+{resume_text}
+
+Make the output clear, brief (3-5 sentences), and professional.
+"""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a professional resume summarizer."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.5,
+            max_tokens=500
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"Error generating summary: {str(e)}"
