@@ -101,10 +101,6 @@ Guidelines:
 
 
 
-
-
-
-
 # ai_extractor.py
 def regenerate_resume_summary(resume_text: str, summary_type: str) -> str:
     from openai import OpenAI
