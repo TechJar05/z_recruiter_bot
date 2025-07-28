@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-#ne=&*%ull(l=76e*ve$26t7k+_i&*fovlm5_)^70nbf#h2uan
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
       'rest_framework',
     'parser_app',
+     'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -53,10 +54,24 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # should be high in the list
+    'django.middleware.common.CommonMiddleware',
+]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = ['*']
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+CORS_ALLOW_ALL_ORIGINS = True
+
+
+CORS_ALLOWED_ORIGINS = [
+    "https://your-frontend-domain.com",
+    "https://z-recruiter-bot.onrender.com",
+    "http://localhost:3000",  # If using React locally
+    "http://localhost:5173",  # If using React locally
 ]
 
 ROOT_URLCONF = 'resume_parser_ai.urls'
-
+CORS_ALLOW_ALL_ORIGINS = True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
