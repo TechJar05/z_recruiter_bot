@@ -101,30 +101,39 @@ Guidelines:
 
 
 
+
+
 # ai_extractor.py
-def regenerate_resume_summary(resume_text: str, summary_type: str) -> str:
+def regenerate_resume_summary(resume_text: str, summary_type: str, prev_resume_summary: str = "", prev_work_summary: str = "") -> str:
     from openai import OpenAI
     from decouple import config
 
     client = OpenAI(api_key=config("OPENAI_API_KEY"))
 
-    prompt_type = {
-        "resume": "Generate a concise and professional resume summary based on the following resume:",
-        "work": "Generate a concise work experience summary from this resume:"
+    base_prompt = {
+        "resume": "Based on the resume text, previous resume summary, and work summary below, generate a clear, concise (3–5 sentences), and professional **resume summary**:",
+        "work": "Based on the resume text, previous resume summary, and work summary below, generate a clear, concise (3–5 sentences), and professional **work experience summary**:"
     }
 
-    prompt = f"""{prompt_type[summary_type]}
+    prompt = f"""{base_prompt[summary_type]}
 
+--- Resume Text ---
 {resume_text}
 
-Make the output clear, brief (3-5 sentences), and professional.
+--- Previous Resume Summary ---
+{prev_resume_summary or "Not available"}
+
+--- Previous Work Summary ---
+{prev_work_summary or "Not available"}
+
+Respond with a rewritten version that feels polished and optimized for professional use.
 """
 
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a professional resume summarizer."},
+                {"role": "system", "content": "You are an expert resume and career summary writer."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.5,
