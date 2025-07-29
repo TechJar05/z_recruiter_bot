@@ -5,83 +5,6 @@ import re
 
 client = OpenAI(api_key=config("OPENAI_API_KEY"))
 
-def fallback_address_extraction(resume_text: str) -> dict:
-    """
-    Fallback function to extract address information using pattern matching
-    when AI fails to capture address details properly.
-    """
-    address_info = {"residential_address": "N/A", "pin_code": "N/A", "city": "N/A"}
-    
-    # Common address patterns
-    pincode_pattern = r'\b\d{6}\b'  # 6-digit pincode
-    mumbai_pincode_pattern = r'\b4\d{5}\b'  # Mumbai pincodes start with 4
-    
-    # Indian cities pattern
-    indian_cities = [
-        "mumbai", "delhi", "bangalore", "chennai", "kolkata", "pune", "hyderabad",
-        "ahmedabad", "jaipur", "surat", "lucknow", "kanpur", "nagpur", "indore",
-        "kochi", "thiruvananthapuram", "coimbatore", "madurai", "salem", "tiruchirappalli",
-        "visakhapatnam", "bhubaneswar", "guwahati", "patna", "raipur", "bhopal"
-    ]
-    
-    # Address keywords
-    address_keywords = [
-        "address", "resident", "permanent", "current", "home", "residential",
-        "street", "road", "lane", "colony", "sector", "area", "block", 
-        "apartment", "flat", "nagar", "city", "town", "village"
-    ]
-    
-    lines = resume_text.split('\n')
-    potential_address_lines = []
-    
-    # Look for lines that might contain address information
-    for i, line in enumerate(lines):
-        line_lower = line.lower().strip()
-        
-        # Skip empty lines
-        if not line_lower:
-            continue
-            
-        # Check if line contains address keywords
-        has_address_keyword = any(keyword in line_lower for keyword in address_keywords)
-        has_city = any(city in line_lower for city in indian_cities)
-        has_pincode = re.search(pincode_pattern, line)
-        
-        if has_address_keyword or has_city or has_pincode:
-            # Include this line and potentially the next 2-3 lines for context
-            context_lines = []
-            for j in range(max(0, i-1), min(len(lines), i+3)):
-                if lines[j].strip():
-                    context_lines.append(lines[j].strip())
-            
-            potential_address_lines.extend(context_lines)
-    
-    # Join potential address lines and clean up
-    if potential_address_lines:
-        full_address = ' '.join(set(potential_address_lines))  # Remove duplicates
-        
-        # Extract pincode
-        pincode_match = re.search(pincode_pattern, full_address)
-        if pincode_match:
-            address_info["pin_code"] = pincode_match.group()
-        
-        # Extract city
-        for city in indian_cities:
-            if city in full_address.lower():
-                address_info["city"] = city.title()
-                break
-        
-        # Clean and set address
-        # Remove email, phone patterns from address
-        cleaned_address = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '', full_address)
-        cleaned_address = re.sub(r'\b\d{10}\b', '', cleaned_address)  # Remove 10-digit phone numbers
-        cleaned_address = re.sub(r'\s+', ' ', cleaned_address).strip()
-        
-        if len(cleaned_address) > 10:  # Reasonable address length
-            address_info["residential_address"] = cleaned_address
-    
-    return address_info
-
 def extract_resume_data_with_ai(resume_text: str) -> dict:
     prompt = f"""
 You are an intelligent resume parser. Your task is to extract structured information from the given resume text.
@@ -93,24 +16,23 @@ Common variations include:
 - Phone → Mobile, Contact Number, Phone Number
 - DOB → Date of Birth, Birth Date, D.O.B
 - Email → Email ID, Email Address
-- Address → Residential Address, Permanent Address, Location, Current Address, Home Address
+- Address → Residential Address, Permanent Address, Location, Current Address, Home Address, Present Address
 - Experience → Work History, Professional Experience, Employment History
 - Education → Academic Background, Qualifications
 - Skills → Technical Skills, Functional Skills, Soft Skills, Tools
 - Achievements → Accomplishments, Awards, Honors
 
-Use your semantic understanding to detect and extract the correct information from this resume.
-Prioritize information that appears in dedicated sections for personal details.
+**CRITICAL ADDRESS EXTRACTION GUIDELINES:**
+- Extract the candidate's personal residential address ONLY
+- Look for addresses in personal details/contact information sections
+- Indian addresses often include: Building name, Area/Locality, City, State, PIN
+- Accept addresses that include: Apartment numbers, Building names, Colony names, Area names, Sector numbers
+- DO NOT extract company addresses from work experience
+- DO NOT extract college addresses from education section
+- If you find a complete residential address, extract it even without traditional keywords like "street" or "road"
+- Extract PIN codes found near addresses (6-digit or 3-digit Mumbai format)
 
-**For address extraction: Extract ANY address information that appears to be the candidate's personal/residential address. This can include:**
-- Complete addresses with house numbers, street names, city, state, pincode
-- Partial addresses with just city, state, and pincode
-- Even just city and state combinations
-- Addresses from contact information sections
-**Do NOT extract addresses from work experience, company locations, or project details.**
-
-**If you find any residential/personal address information (even partial), extract it. Do not return "N/A" unless there's absolutely no address information.**
-**For other fields like 'date_of_birth' or 'hobbies', if not clearly mentioned, return "N/A".**
+**If a field like 'date_of_birth' or 'hobbies' is not explicitly mentioned or clearly identifiable, return "N/A" for that field.**
 
 Resume:
 \"\"\"
@@ -120,7 +42,7 @@ Resume:
 Extract and return only this JSON structure:
 {{
   "full_name": "", "contact_number": "", "email_address": "", "date_of_birth": "",
-  "gender": "", "marital_status": "", "nationality": "", "residential_address": "", "pin_code": "",
+  "gender": "", "marital_status": "", "nationality": "", "address": "", "pin_code": "",
 
   "resume_summary": "",
   "industry": "",
@@ -171,9 +93,11 @@ Extract and return only this JSON structure:
 Guidelines:
 - Handle all kinds of resumes (chronological, functional, modern, classic).
 - Be flexible with synonyms, formats, and section variations.
-- Use semantic understanding to extract fields even if they appear under different names or with line breaks (e.g., "Date of Birth:\\n01/01/1990").
+- Use semantic understanding to extract fields even if they appear under different names or with line breaks.
+- For 'address' field, prioritize personal/residential addresses from contact sections.
+- Indian addresses are valid even without "street/road" keywords if they contain building/area/locality information.
+- Extract PIN codes that appear near addresses (6-digit or 3-digit Mumbai style).
 - Do NOT include markdown, explanations, or formatting — just return clean valid JSON.
-- For 'residential_address' field, extract ANY personal/residential address information found, even if partial (city, state, pincode combinations are acceptable).
 - For any field not found or unclear, return "N/A" or empty array/object as per the JSON structure.
 """
 
@@ -183,7 +107,7 @@ Guidelines:
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a professional resume parser that uses semantic understanding and returns structured JSON. Prioritize accuracy and context. Be liberal in extracting address information - any residential/personal address details should be captured."
+                    "content": "You are a professional resume parser specialized in Indian resumes. You understand Indian address formats and extract personal residential addresses accurately. Return only valid JSON."
                 },
                 {
                     "role": "user",
@@ -213,52 +137,19 @@ Guidelines:
                 "ai_response": raw_content
             }
 
-        # Improved address validation - be more liberal in accepting addresses
-        address = parsed_data.get("residential_address", "").strip()
+        # More flexible address validation for Indian addresses
+        address = parsed_data.get("address", "").strip()
         if address and address.lower() != "n/a":
-            # Accept address if it has any of these patterns:
-            # 1. Contains digits (house numbers, pincodes)
-            # 2. Contains common address keywords
-            # 3. Contains Indian city/state names
-            # 4. Has length > 10 (reasonable address length)
-            
-            indian_locations = [
-                "mumbai", "delhi", "bangalore", "chennai", "kolkata", "pune", "hyderabad", 
-                "ahmedabad", "jaipur", "surat", "lucknow", "kanpur", "nagpur", "indore",
-                "maharashtra", "karnataka", "tamil nadu", "gujarat", "rajasthan", "kerala",
-                "punjab", "uttar pradesh", "west bengal", "bihar", "telangana", "andhra pradesh"
-            ]
-            
-            address_lower = address.lower()
-            has_digits = re.search(r'\d', address)
-            has_keywords = any(kw in address_lower for kw in [
-                "street", "road", "lane", "colony", "sector", "area", "block", 
-                "apartment", "flat", "nagar", "city", "town", "village", "dist",
-                "district", "pincode", "pin", "zip"
-            ])
-            has_indian_location = any(loc in address_lower for loc in indian_locations)
-            sufficient_length = len(address) >= 5
-            
-            # Keep address if any validation criteria is met
-            if not (has_digits or has_keywords or has_indian_location or sufficient_length):
-                print(f"Address rejected: '{address}' - No valid criteria met")
-                parsed_data["residential_address"] = "N/A"
-                parsed_data["pin_code"] = "N/A"
+            # Check if it's a meaningful address (not just a city name)
+            if is_valid_indian_address(address):
+                parsed_data["address"] = address
             else:
-                print(f"Address accepted: '{address}'")
+                print(f"Address validation failed for: {address}")
+                parsed_data["address"] = "N/A"
+                parsed_data["pin_code"] = "N/A"
         else:
-            parsed_data["residential_address"] = "N/A"
+            parsed_data["address"] = "N/A"
             parsed_data["pin_code"] = "N/A"
-
-        # Apply fallback address extraction if AI failed to find address
-        if (parsed_data.get("residential_address") == "N/A" or 
-            not parsed_data.get("residential_address")):
-            print("=== APPLYING FALLBACK ADDRESS EXTRACTION ===")
-            fallback_data = fallback_address_extraction(resume_text)
-            
-            if fallback_data["residential_address"] != "N/A":
-                print(f"Fallback found address: {fallback_data['residential_address']}")
-                parsed_data.update(fallback_data)
 
         # Standardize string fields to "N/A" if empty
         single_fields = [
@@ -268,7 +159,7 @@ Guidelines:
             "expected_salary", "current_salary"
         ]
         for field in single_fields:
-            if not parsed_data.get(field) or parsed_data.get(field) == "":
+            if not parsed_data.get(field) or str(parsed_data.get(field)).strip() in ["", "null", "None"]:
                 parsed_data[field] = "N/A"
 
         # Set empty lists where applicable
@@ -278,8 +169,6 @@ Guidelines:
         ]
         for field in list_fields:
             if not isinstance(parsed_data.get(field), list):
-                parsed_data[field] = []
-            elif len(parsed_data[field]) == 0:
                 parsed_data[field] = []
 
         # Ensure nested skill categories exist and are lists
@@ -300,3 +189,127 @@ Guidelines:
     except Exception as e:
         print("Unexpected error:", str(e))
         return {"error": str(e)}
+
+def is_valid_indian_address(address: str) -> bool:
+    """
+    Validates if the given text is a meaningful Indian address.
+    More flexible than the previous validation.
+    """
+    if not address or len(address.strip()) < 10:
+        return False
+    
+    address_lower = address.lower().strip()
+    
+    # Reject if it's just a city/state name
+    single_word_cities = ["mumbai", "delhi", "bangalore", "chennai", "kolkata", "hyderabad", "pune", "ahmedabad"]
+    if address_lower in single_word_cities:
+        return False
+    
+    # Check for address indicators (more flexible than before)
+    address_indicators = [
+        # Traditional indicators
+        "street", "road", "lane", "colony", "sector", "area", "block", "apartment", "flat",
+        # Indian specific indicators
+        "nagar", "gali", "marg", "chowk", "society", "complex", "residency", "enclave",
+        "layout", "extension", "cross", "main", "phase", "wing", "tower", "building",
+        "plot", "house", "bungalow", "villa", "row", "quarters", "estate", "park",
+        # Abbreviations
+        "apt", "bldg", "soc", "co-op", "chs", "hsg", "res"
+    ]
+    
+    # Check if address has indicators OR has structural elements
+    has_indicators = any(indicator in address_lower for indicator in address_indicators)
+    has_numbers = bool(re.search(r'\d', address))
+    has_commas = ',' in address  # Indicates structured address
+    has_multiple_words = len(address.split()) >= 3
+    
+    # Accept if it has indicators OR if it's structured with numbers and multiple components
+    if has_indicators:
+        return True
+    elif has_numbers and has_commas and has_multiple_words:
+        return True
+    elif has_numbers and has_multiple_words and len(address.split()) >= 4:
+        return True
+    
+    return False
+
+def regenerate_resume_summary(resume_text: str, summary_type: str) -> str:
+    """Generate resume or work summary using AI"""
+    if summary_type == "resume":
+        prompt = f"""
+Based on the following resume text, create a professional 2-3 sentence resume summary that highlights the candidate's key strengths, experience, and value proposition:
+
+{resume_text[:1000]}
+
+Return only the summary text, no additional formatting or explanations.
+"""
+    else:  # work summary
+        prompt = f"""
+Based on the following resume text, create a professional 2-3 sentence work experience summary that highlights the candidate's key professional achievements and expertise:
+
+{resume_text[:1000]}
+
+Return only the summary text, no additional formatting or explanations.
+"""
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a professional resume writer. Create concise, impactful summaries."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.3,
+            max_tokens=150
+        )
+        
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error generating {summary_type} summary:", str(e))
+        return "N/A"
+
+def extract_address_from_text(text: str) -> str:
+    """
+    Fallback method to extract address from raw text when AI fails.
+    """
+    lines = text.split('\n')
+    potential_addresses = []
+    
+    # Look for address patterns in text
+    address_keywords = [
+        'address', 'residence', 'home', 'permanent', 'current', 'residential',
+        'location', 'present address', 'correspondence'
+    ]
+    
+    for i, line in enumerate(lines):
+        line_lower = line.lower().strip()
+        
+        # Skip empty lines
+        if not line_lower:
+            continue
+            
+        # Look for address section headers
+        if any(keyword in line_lower for keyword in address_keywords):
+            # Check next few lines for actual address content
+            for j in range(i + 1, min(i + 4, len(lines))):
+                next_line = lines[j].strip()
+                if next_line and is_valid_indian_address(next_line):
+                    potential_addresses.append(next_line)
+        
+        # Look for lines that look like addresses directly
+        elif is_valid_indian_address(line):
+            # Make sure it's not in work experience or education section
+            context_lines = ' '.join(lines[max(0, i-3):i+3]).lower()
+            exclude_keywords = ['company', 'organization', 'college', 'university', 'school', 'institute', 'experience', 'worked']
+            
+            if not any(keyword in context_lines for keyword in exclude_keywords):
+                potential_addresses.append(line.strip())
+    
+    # Return the first valid address found
+    return potential_addresses[0] if potential_addresses else "N/A"
