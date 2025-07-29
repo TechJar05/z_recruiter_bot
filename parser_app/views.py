@@ -79,32 +79,38 @@ class ResumeParserAPIView(APIView):
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.parsers import JSONParser
 from .services.ai_extractor import regenerate_resume_summary
 from parser_app.utils.token_limiter import truncate_text
-from rest_framework.parsers import MultiPartParser
 
 class RegenerateSummaryAPIView(APIView):
-    parser_classes = [MultiPartParser]
+    parser_classes = [JSONParser]
 
     def post(self, request):
-        file = request.FILES.get('resume')
         summary_type = request.data.get('type')  # 'resume' or 'work'
 
-        if not file or summary_type not in ['resume', 'work']:
-            return Response({"error": "Missing resume or type"}, status=400)
+        # Dynamically pick the right field
+        if summary_type == 'resume':
+            input_text = request.data.get('resume_summary')
+        elif summary_type == 'work':
+            input_text = request.data.get('work_summary')
+        else:
+            return Response({"error": "Invalid summary type"}, status=400)
 
-        # Extract and truncate text
-        file.seek(0)
-        raw_text = file.read().decode('latin1') if isinstance(file.read(), bytes) else file.read()
-        trimmed_text = truncate_text(raw_text)
+        if not input_text:
+            return Response({"error": f"{summary_type}_summary is required"}, status=400)
 
-        # Regenerate summary
-        new_summary = regenerate_resume_summary(trimmed_text, summary_type)
+        trimmed_text = truncate_text(input_text)
+
+        regenerated = regenerate_resume_summary(trimmed_text, summary_type)
 
         return Response({
             "type": summary_type,
-            "regenerated_summary": new_summary
+            "regenerated_summary": regenerated
         })
+
+
+
 
 
 
