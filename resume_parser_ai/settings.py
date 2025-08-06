@@ -19,7 +19,8 @@ import os
 from decouple import config
 
 OPENAI_API_KEY = config("OPENAI_API_KEY")
-APOLLO_API_KEY = config("APOLLO_API_KEY")
+# APOLLO_API_KEY = config("APOLLO_API_KEY")
+APOLLO_API_KEY = config('APOLLO_API_KEY')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
