@@ -21,6 +21,10 @@ from decouple import config
 OPENAI_API_KEY = config("OPENAI_API_KEY")
 # APOLLO_API_KEY = config("APOLLO_API_KEY")
 APOLLO_API_KEY = config('APOLLO_API_KEY')
+# settings.py
+
+SERP_API_KEY = "your_actual_serpapi_key_here"
+SERP_API_KEY = config('SERP_API_KEY')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
