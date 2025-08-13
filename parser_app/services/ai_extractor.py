@@ -142,3 +142,99 @@ Respond with a rewritten version that feels polished and optimized for professio
         return response.choices[0].message.content.strip()
     except Exception as e:
         return f"Error generating summary: {str(e)}"
+    
+
+
+import concurrent.futures
+
+def generate_individual_work_summaries(work_experience: list, resume_text: str):
+    from openai import OpenAI
+    from decouple import config
+
+    client = OpenAI(api_key=config("OPENAI_API_KEY"))
+
+    def generate(job):
+        job_prompt = f"""
+Based on the resume text and this specific job experience, generate a professional, concise (2-4 sentences) work summary.
+
+--- Resume Text ---
+{resume_text}
+
+--- Job Details ---
+Company: {job.get("company_name", "")}
+Designation: {job.get("designation", "")}
+Department: {job.get("department", "")}
+Start Date: {job.get("start_date", "")}
+End Date: {job.get("end_date", "")}
+"""
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are an expert career and resume writer."},
+                    {"role": "user", "content": job_prompt}
+                ],
+                temperature=0.5,
+                max_tokens=200
+            )
+            return {"company_name": job.get("company_name", ""), "work_summary": response.choices[0].message.content.strip()}
+        except Exception as e:
+            return {"company_name": job.get("company_name", ""), "work_summary": f"Error: {str(e)}"}
+
+    # Parallel execution
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        results = list(executor.map(generate, work_experience))
+
+    return results
+
+
+  
+
+
+
+
+# def generate_individual_work_summaries(work_experience: list, resume_text: str) -> list:
+#     """
+#     Generates a polished work summary for each job in the work_experience list.
+#     """
+#     from openai import OpenAI
+#     from decouple import config
+
+#     client = OpenAI(api_key=config("OPENAI_API_KEY"))
+#     job_summaries = []
+
+#     for job in work_experience:
+#         # Compose a job-specific prompt
+#         job_prompt = f"""
+# Based on the resume text and this specific job experience, generate a professional, concise (2-4 sentences) work summary.
+
+# --- Resume Text ---
+# {resume_text}
+
+# --- Job Details ---
+# Company: {job.get("company_name", "")}
+# Designation: {job.get("designation", "")}
+# Department: {job.get("department", "")}
+# Start Date: {job.get("start_date", "")}
+# End Date: {job.get("end_date", "")}
+
+# Respond with a polished work summary suitable for LinkedIn or resume.
+# """
+
+#         try:
+#             response = client.chat.completions.create(
+#                 model="gpt-3.5-turbo",
+#                 messages=[
+#                     {"role": "system", "content": "You are an expert career and resume writer."},
+#                     {"role": "user", "content": job_prompt}
+#                 ],
+#                 temperature=0.5,
+#                 max_tokens=200
+#             )
+#             job_summary = response.choices[0].message.content.strip()
+#         except Exception as e:
+#             job_summary = f"Error generating summary: {str(e)}"
+
+#         job_summaries.append({"company_name": job.get("company_name", ""), "work_summary": job_summary})
+
+#     return job_summaries

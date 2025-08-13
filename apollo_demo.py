@@ -199,3 +199,50 @@ else:
 
 
 
+
+
+
+
+
+# apollo api
+
+
+
+# # # # # linkedin parsing
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework import status
+# import requests
+# import os
+# from django.conf import settings
+
+# APOLLO_BASE_URL = 'https://api.apollo.io/api/v1/people/match'
+
+
+# class ApolloLinkedInLookupAPIView(APIView):
+#     def post(self, request):
+#         linkedin_url = request.data.get("linkedin_url")
+
+#         if not linkedin_url:
+#             return Response({"error": "linkedin_url is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         headers = {"X-Api-Key":settings.APOLLO_API_KEY}
+#         params = {"linkedin_url": linkedin_url}
+
+#         try:
+#             apollo_response = requests.get(APOLLO_BASE_URL, headers=headers, params=params)
+
+#             try:
+#                 data = apollo_response.json()
+#             except ValueError:
+#                 return Response({
+#                     "error": "Apollo API did not return valid JSON.",
+#                     "status_code": apollo_response.status_code,
+#                     "raw_response": apollo_response.text  # helpful for debugging
+#                 }, status=apollo_response.status_code)
+
+#             return Response(data, status=apollo_response.status_code)
+
+#         except Exception as e:
+#             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
