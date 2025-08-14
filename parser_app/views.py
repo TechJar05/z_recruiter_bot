@@ -252,10 +252,8 @@ class ResumeParserAPIView(APIView):
                     }
 
                 # 8️⃣ Determine LinkedIn URL (resume or manual input)
-                linkedin_url = (
-                    normalize_linkedin_url(parsed_data.get("linkedin_profile"))
-                    or manual_linkedin_url
-                )
+                linkedin_raw = parsed_data.get("linkedin_profile") or manual_linkedin_url
+                linkedin_url = normalize_linkedin_url(linkedin_raw)
                 enriched_data["linkedin_url_used"] = linkedin_url
 
                 # 9️⃣ Fetch LinkedIn data async
