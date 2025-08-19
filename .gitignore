@@ -57,3 +57,7 @@ htmlcov/
 
 # OpenAI token caching
 openai_api.log
+.apollo_exports
+apollo_exports/
+apollo_exports/*
+apollo_exports
