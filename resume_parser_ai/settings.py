@@ -31,7 +31,7 @@ APOLLO_API_KEY = config('APOLLO_API_KEY')
 SECRET_KEY = 'django-insecure-#ne=&*%ull(l=76e*ve$26t7k+_i&*fovlm5_)^70nbf#h2uan'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 # settings.py
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760 * 3  # 30 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760 * 3  # 30 MB
