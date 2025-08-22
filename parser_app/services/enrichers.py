@@ -67,7 +67,7 @@ import re
 def enrich_address_with_pincode(parsed_resume: dict) -> dict:
     raw_pin = parsed_resume.get("pin_code", "").strip()
     address = parsed_resume.get("residential_address", "").strip()
-    print(f"Enriching address with pincode: {address}, raw pin: {raw_pin}")
+    # print(f"Enriching address with pincode: {address}, raw pin: {raw_pin}")
 
     corrected_pin = ""
 

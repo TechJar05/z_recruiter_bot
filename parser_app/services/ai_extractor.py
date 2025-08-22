@@ -160,8 +160,8 @@ Guidelines:
                     "content": prompt
                 }
             ],
-            temperature=0.2,
-            max_tokens=1800
+            temperature=0.5,
+            max_tokens=1500
         )
         return json.loads(response.choices[0].message.content)
     except Exception as e:
