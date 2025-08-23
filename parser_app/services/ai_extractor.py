@@ -5,7 +5,8 @@
 from openai import OpenAI
 from decouple import config
 import json
-
+import json
+import re
 client = OpenAI(api_key=config("OPENAI_API_KEY"))
 
 
@@ -160,7 +161,7 @@ Guidelines:
                     "content": prompt
                 }
             ],
-            temperature=0.5,
+            temperature=0.0,
             max_tokens=1500
         )
         return json.loads(response.choices[0].message.content)
