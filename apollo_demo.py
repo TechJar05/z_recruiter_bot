@@ -7,7 +7,7 @@ import json
 API_KEY = 'VZ_OvcM-Q2BUsi7xM7vzcg'  # Replace with your real API key
 
 # 🔗 Target LinkedIn profile URL
-linkedin_url = 'https://www.linkedin.com/in/yash-rajbhoj/'
+linkedin_url = 'https://linkedin.com/in/omkar-latambale/'
 
 # 🔍 Match endpoint (GET request with query param)
 url = 'https://api.apollo.io/v1/people/match'

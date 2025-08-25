@@ -335,7 +335,7 @@ def validate_education_degrees(extracted_data: dict) -> dict:
         # Option 3: Throw an error
         
         # Option 2: Set to empty and continue
-        edu['degree'] = ''
+        edu['degree'] = degree
         validated_education.append(edu)
     
     extracted_data['education'] = validated_education
